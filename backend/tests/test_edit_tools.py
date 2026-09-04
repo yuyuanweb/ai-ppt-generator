@@ -76,9 +76,7 @@ async def test_tools_reject_locked_and_last_block() -> None:
     assert "人工修改" in locked
     assert locked_session.by_id("a") is not None
 
-    replace_locked = await locked_tools["replace_text"].ainvoke(
-        {"block_id": "a", "text": "覆盖"}
-    )
+    replace_locked = await locked_tools["replace_text"].ainvoke({"block_id": "a", "text": "覆盖"})
     assert "人工修改" in replace_locked
 
     session = EditSession(

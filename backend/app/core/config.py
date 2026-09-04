@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
@@ -52,6 +53,32 @@ class Settings(BaseSettings):
     # 上传体积上限。定得过大会让解析长时间占住请求线程
     max_upload_mb: int = 10
     max_image_mb: int = 8
+
+    # ---- 钱包与支付（参考 sub2api：余额落在 users 表，充值走订单 + 幂等流水）----
+    # 总开关关闭时充值接口返回 403，但余额查询仍可用，便于先上线钱包再开通道
+    payment_enabled: bool = False
+    # mock 只用于本地联调与测试：不调任何网关，用 /orders/{id}/mock-pay 模拟回调
+    payment_provider: Literal["mock", "easypay"] = "mock"
+    payment_currency: str = "CNY"
+    # 对外可访问的站点根地址（含协议，不带末尾斜杠），用来拼网关的 notify / return 回跳
+    payment_public_base_url: str = "http://localhost:39173"
+    payment_min_amount: Decimal = Decimal("1")
+    # 0 表示不限
+    payment_max_amount: Decimal = Decimal("10000")
+    payment_daily_limit: Decimal = Decimal("0")
+    payment_order_timeout_minutes: int = 30
+    payment_max_pending_orders: int = 3
+    # 通道手续费率（百分比，向上取整到分）与到账倍率（充 100 送 10 即 1.1）
+    payment_fee_rate: Decimal = Decimal("0")
+    payment_recharge_multiplier: Decimal = Decimal("1")
+    # 每生成一页扣多少余额；0 = 免费，不改变现有行为
+    charge_per_page: Decimal = Decimal("0")
+
+    # 易支付（EasyPay 协议）商户参数。api = mapi.php 服务端下单拿二维码；submit = 拼 submit.php 跳转
+    easypay_pid: str = ""
+    easypay_key: str = ""
+    easypay_api_base: str = ""
+    easypay_mode: Literal["api", "submit"] = "api"
 
     @property
     def max_upload_bytes(self) -> int:

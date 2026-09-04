@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from arq.connections import ArqRedis
 from fastapi import APIRouter, HTTPException, Request, Response, status
@@ -9,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.sse import event_stream_response
 from app.api.v1.deck._shared import QueueDep, SessionDep, _ensure_idle
 from app.api.v1.projects import OwnedProject
+from app.core.config import get_settings
 from app.models.project import Project
 from app.schemas.deck import DeckEvent, DeckGenerateAccepted, DeckGenerateRequest
+from app.services import payment as payment_service
 from app.services.deck import (
     clear_cancel,
     deck_events,
@@ -34,6 +37,32 @@ def _ensure_confirmed(project: Project) -> None:
         )
 
 
+async def _charge_pages(
+    session: AsyncSession, project: Project, page_count: int, *, code: str
+) -> Decimal | None:
+    """按页预扣余额，返回扣掉的金额；单价为 0（默认）时跳过并返回 None。
+
+    预扣而不是生成完再扣：任务在 worker 里异步跑，事后扣费失败没有可拒绝的请求。
+    余额不足由 InsufficientBalance 直接返回 402，前端据此引导去充值。
+    """
+    price = get_settings().charge_per_page
+    if price <= 0 or page_count <= 0:
+        return None
+    cost = (price * page_count).quantize(Decimal("0.01"))
+    try:
+        await payment_service.charge_balance(
+            session,
+            project.user_id,
+            cost,
+            code=code,
+            notes=f"生成 {page_count} 页 · {project.title[:40]}",
+        )
+    except payment_service.InsufficientBalance:
+        await session.rollback()
+        raise
+    return cost
+
+
 async def _enqueue(
     queue: ArqRedis,
     session: AsyncSession,
@@ -41,6 +70,7 @@ async def _enqueue(
     slide_ids: list[uuid.UUID],
     *,
     previous_status: str,
+    charge: tuple[str, Decimal] | None = None,
 ) -> str:
     # 取消标记由发起方清理：新一轮生成理应从干净状态开始，
     # 放在任务里清会与「先取消再立刻重发」的时序抢跑。
@@ -54,8 +84,13 @@ async def _enqueue(
             _job_id=job_id,
         )
     except RedisError as error:
-        # 入队前已 commit 为 generating；rollback 无效，须显式恢复原状态
+        # 入队前已 commit 为 generating；rollback 无效，须显式恢复原状态并退回预扣的费用
         project.status = previous_status
+        if charge is not None:
+            code, cost = charge
+            await payment_service.refund_balance(
+                session, project.user_id, cost, code=f"REFUND-{code}", notes="任务入队失败退回"
+            )
         await session.commit()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -90,11 +125,18 @@ async def generate_deck(
 
     pending_ids = [slide.id for slide in pending]
     previous_status = project.status
+    charge_code = f"deck-{project.id}-{uuid.uuid4().hex}"
+    cost = await _charge_pages(session, project, len(pending_ids), code=charge_code)
     project.status = "generating"
     await session.commit()
 
     job_id = await _enqueue(
-        queue, session, project, pending_ids, previous_status=previous_status
+        queue,
+        session,
+        project,
+        pending_ids,
+        previous_status=previous_status,
+        charge=(charge_code, cost) if cost is not None else None,
     )
     await deck_events.publish(
         project.id,
@@ -129,14 +171,24 @@ async def retry_slide(
     if target.status == "generating":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="该页正在生成中")
 
-    # 重试等价于把这一页退回待生成，走的仍是整份生成那条路径
+    # 重试等价于把这一页退回待生成，走的仍是整份生成那条路径。
+    # 失败页重试不重复扣费：第一次生成时已经按页预扣过了。
     previous_status = project.status
+    charge_code = f"retry-{slide_id}-{uuid.uuid4().hex}"
+    cost = None
+    if target.status != "failed":
+        cost = await _charge_pages(session, project, 1, code=charge_code)
     reset_slide_for_regeneration(target, layout_mode=project.layout_mode)
     project.status = "generating"
     await session.commit()
 
     job_id = await _enqueue(
-        queue, session, project, [slide_id], previous_status=previous_status
+        queue,
+        session,
+        project,
+        [slide_id],
+        previous_status=previous_status,
+        charge=(charge_code, cost) if cost is not None else None,
     )
     return DeckGenerateAccepted(job_id=job_id, total=len(slides), pending=1)
 

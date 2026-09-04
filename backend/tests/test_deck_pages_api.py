@@ -348,9 +348,7 @@ async def test_delete_keeps_at_least_one_page(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_page_operations_reject_while_generating(client: AsyncClient) -> None:
     headers = await _sign_up(client)
-    project, slides = await _project_with_pages(
-        client, headers, ["一", "二"], status="generating"
-    )
+    project, slides = await _project_with_pages(client, headers, ["一", "二"], status="generating")
 
     insert = await client.post(
         f"/api/v1/projects/{project['id']}/deck/slides", headers=headers, json={}

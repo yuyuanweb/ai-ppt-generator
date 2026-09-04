@@ -6,6 +6,11 @@ import tempfile
 # backend/var/storage 落文件。
 _STORAGE_DIR = tempfile.mkdtemp(prefix="aippt-test-storage-")
 os.environ["STORAGE_LOCAL_DIR"] = _STORAGE_DIR
+# 支付用例走 mock 通道，且需要总开关打开；同样必须在 Settings 构造前设好
+os.environ["PAYMENT_ENABLED"] = "true"
+os.environ["PAYMENT_PROVIDER"] = "mock"
+os.environ["PAYMENT_MAX_PENDING_ORDERS"] = "3"
+os.environ["CHARGE_PER_PAGE"] = "0"
 
 import pytest  # noqa: E402
 

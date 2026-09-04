@@ -82,15 +82,18 @@ def test_fixed_layout_skips_block_count_thin_check() -> None:
 
 
 def test_repair_worthy_skips_overflow_capacity() -> None:
-    assert is_repair_worthy(
-        StructureIssue(
-            severity="warning",
-            slide_id="s",
-            slot_id="body",
-            message="溢出",
-            code="overflow",
+    assert (
+        is_repair_worthy(
+            StructureIssue(
+                severity="warning",
+                slide_id="s",
+                slot_id="body",
+                message="溢出",
+                code="overflow",
+            )
         )
-    ) is False
+        is False
+    )
     assert is_repair_worthy(
         StructureIssue(
             severity="warning",
