@@ -487,9 +487,7 @@ async def test_propose_passes_history(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    generator = ScriptedEditGenerator(
-        operations=[TextPatch(block_id="t1", text="更短的标题")]
-    )
+    generator = ScriptedEditGenerator(operations=[TextPatch(block_id="t1", text="更短的标题")])
     monkeypatch.setattr(
         "app.api.v1.deck.ai_edit.create_slide_edit_generator",
         lambda: generator,
@@ -545,9 +543,7 @@ async def test_apply_add_on_flex_updates_tree(client: AsyncClient) -> None:
     body = response.json()
     assert [block["id"] for block in body["blocks"]] == ["pg-title", "pg-lead", "pg-extra"]
     leaf_ids = [
-        child["block_id"]
-        for child in body["layout_tree"]["children"]
-        if child["type"] == "block"
+        child["block_id"] for child in body["layout_tree"]["children"] if child["type"] == "block"
     ]
     assert "pg-extra" in leaf_ids
 
@@ -570,4 +566,3 @@ async def test_apply_add_on_fixed_is_rejected(client: AsyncClient) -> None:
         },
     )
     assert response.status_code == 422
-

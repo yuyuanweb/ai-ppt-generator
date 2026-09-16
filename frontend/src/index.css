@@ -65,6 +65,15 @@
   background-repeat: no-repeat;
 }
 
+/* 登录页衬底：极淡的网格线叠在 aurora 光晕上，给大面积留白一点结构感 */
+@utility bg-grid-faint {
+  background-image:
+    linear-gradient(to right, rgba(15, 21, 34, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 21, 34, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
+}
+
 /* 编辑器画布衬底：比页面底色更深一档，让白色幻灯片成为唯一焦点 */
 @utility bg-stage {
   background-color: #e9edf5;

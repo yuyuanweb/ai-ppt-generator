@@ -324,9 +324,7 @@ async def test_put_flex_layout_reorders_leaves(client: AsyncClient) -> None:
     new_tree = FlexContainer.model_validate(body["layout_tree"])
     assert isinstance(new_tree.children[0], FlexContainer)
     first_row_leaves = [
-        child.block_id
-        for child in new_tree.children[0].children
-        if isinstance(child, FlexLeaf)
+        child.block_id for child in new_tree.children[0].children if isinstance(child, FlexLeaf)
     ]
     assert first_row_leaves == ["b1"]
 

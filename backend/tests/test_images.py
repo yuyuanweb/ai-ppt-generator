@@ -327,9 +327,7 @@ async def test_bailian_provider_posts_native_payload_and_downloads_image() -> No
                                 "finish_reason": "stop",
                                 "message": {
                                     "role": "assistant",
-                                    "content": [
-                                        {"image": "https://cdn.example.com/bailian.png"}
-                                    ],
+                                    "content": [{"image": "https://cdn.example.com/bailian.png"}],
                                 },
                             }
                         ]

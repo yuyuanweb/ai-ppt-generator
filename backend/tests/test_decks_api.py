@@ -111,9 +111,7 @@ def _fake_flex_draft(layout_id: str) -> FlexSlideDraft:
     tree = FlexContainer(
         type="column",
         id="root",
-        children=[
-            FlexLeaf(id=f"leaf-{block.id}", block_id=block.id, grow=1.0) for block in blocks
-        ],
+        children=[FlexLeaf(id=f"leaf-{block.id}", block_id=block.id, grow=1.0) for block in blocks],
     )
     return FlexSlideDraft(blocks=blocks, layout_tree=tree, speaker_notes="讲稿提示")
 

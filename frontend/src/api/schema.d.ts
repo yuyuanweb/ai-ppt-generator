@@ -798,6 +798,169 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payment/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment Config */
+        get: operations["payment_config_api_v1_payment_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wallet */
+        get: operations["wallet_api_v1_payment_wallet_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ledger */
+        get: operations["ledger_api_v1_payment_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Orders */
+        get: operations["list_orders_api_v1_payment_orders_get"];
+        put?: never;
+        /** Create Order */
+        post: operations["create_order_api_v1_payment_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders/by-trade-no/{out_trade_no}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order By Trade No
+         * @description 回跳结果页只拿得到商户单号，用它找回订单。
+         */
+        get: operations["get_order_by_trade_no_api_v1_payment_orders_by_trade_no__out_trade_no__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Order */
+        get: operations["get_order_api_v1_payment_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders/{order_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify Order
+         * @description 主动向网关查单：回调丢失或用户已付却还在等时的兜底。
+         */
+        post: operations["verify_order_api_v1_payment_orders__order_id__verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders/{order_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Order */
+        post: operations["cancel_order_api_v1_payment_orders__order_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/orders/{order_id}/mock-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mock Pay
+         * @description 本地联调「模拟支付成功」：让 mock 网关记一笔已付，再走正规入账链路。
+         */
+        post: operations["mock_pay_api_v1_payment_orders__order_id__mock_pay_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1245,6 +1408,34 @@ export interface components {
              * @default 22
              */
             inset_pt: number;
+        };
+        /** CreateOrderRequest */
+        CreateOrderRequest: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * Payment Type
+             * @enum {string}
+             */
+            payment_type: "alipay" | "wxpay";
+            /**
+             * Is Mobile
+             * @default false
+             */
+            is_mobile: boolean;
+        };
+        /** CreateOrderResponse */
+        CreateOrderResponse: {
+            order: components["schemas"]["PaymentOrderPublic"];
+            /**
+             * Payment Mode
+             * @enum {string}
+             */
+            payment_mode: "qrcode" | "redirect";
+            /** Pay Url */
+            pay_url: string | null;
+            /** Qr Code */
+            qr_code: string | null;
         };
         /**
          * Deck
@@ -1784,6 +1975,31 @@ export interface components {
             /** Revision */
             revision: number;
         };
+        /** LedgerEntryPublic */
+        LedgerEntryPublic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Type */
+            type: string;
+            /** Amount */
+            amount: string;
+            /** Balance After */
+            balance_after: string;
+            /** Order Id */
+            order_id: string | null;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -1922,6 +2138,80 @@ export interface components {
             line?: string | null;
             /** Line Strong */
             line_strong?: string | null;
+        };
+        /**
+         * PaymentConfigPublic
+         * @description 结账页一次拿齐：开关、可用方式、金额边界、费率、倍率与每页扣费。
+         */
+        PaymentConfigPublic: {
+            /** Enabled */
+            enabled: boolean;
+            /** Provider */
+            provider: string;
+            /** Currency */
+            currency: string;
+            /** Payment Types */
+            payment_types: string[];
+            /** Min Amount */
+            min_amount: string;
+            /** Max Amount */
+            max_amount: string;
+            /** Fee Rate */
+            fee_rate: string;
+            /** Recharge Multiplier */
+            recharge_multiplier: string;
+            /** Order Timeout Minutes */
+            order_timeout_minutes: number;
+            /** Charge Per Page */
+            charge_per_page: string;
+            /** Preset Amounts */
+            preset_amounts: string[];
+        };
+        /** PaymentOrderPublic */
+        PaymentOrderPublic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Out Trade No */
+            out_trade_no: string;
+            /** Order Type */
+            order_type: string;
+            /** Amount */
+            amount: string;
+            /** Pay Amount */
+            pay_amount: string;
+            /** Fee Rate */
+            fee_rate: string;
+            /** Currency */
+            currency: string;
+            /** Payment Type */
+            payment_type: string;
+            /** Provider Key */
+            provider_key: string;
+            /** Status */
+            status: string;
+            /** Pay Url */
+            pay_url: string | null;
+            /** Qr Code */
+            qr_code: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Paid At */
+            paid_at: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /** Failed Reason */
+            failed_reason: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** ProjectCreate */
         ProjectCreate: {
@@ -2569,6 +2859,13 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WalletPublic */
+        WalletPublic: {
+            /** Balance */
+            balance: string;
+            /** Currency */
+            currency: string;
         };
         /**
          * Watermark
@@ -4224,6 +4521,274 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    payment_config_api_v1_payment_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentConfigPublic"];
+                };
+            };
+        };
+    };
+    wallet_api_v1_payment_wallet_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletPublic"];
+                };
+            };
+        };
+    };
+    ledger_api_v1_payment_ledger_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerEntryPublic"][];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_payment_orders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"][];
+                };
+            };
+        };
+    };
+    create_order_api_v1_payment_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateOrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_by_trade_no_api_v1_payment_orders_by_trade_no__out_trade_no__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                out_trade_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_payment_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_order_api_v1_payment_orders__order_id__verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_order_api_v1_payment_orders__order_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mock_pay_api_v1_payment_orders__order_id__mock_pay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOrderPublic"];
                 };
             };
             /** @description Validation Error */
